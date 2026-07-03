@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Archive</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #111111;
+    --muted: #9a9a9a;
+    --line: #ececec;
+    --max: 1080px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  button {
+    font-family: inherit;
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 0;
+    letter-spacing: 0.02em;
+  }
+
+  input { font-family: inherit; }
+
+  .wrap {
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  /* ---------- Views ---------- */
+  .view { display: none; padding-bottom: 160px; }
+  .view.active { display: block; animation: fade .5s ease; }
+
+  @keyframes fade {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---------- Header / brand ---------- */
+  .topbar { padding: 48px 0 0; }
+  .brand {
+    font-size: 13px;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    color: var(--fg);
+    font-weight: 500;
+  }
+  .sub {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    font-weight: 300;
+  }
+  /* editable header */
+  .brand[contenteditable], .sub[contenteditable] {
+    display: inline-block;
+    outline: none;
+    cursor: text;
+    border-radius: 5px;
+    margin-left: -5px;
+    padding: 1px 5px;
+    transition: background .2s ease;
+  }
+  .brand[contenteditable]:hover, .sub[contenteditable]:hover { background: #f4f4f4; }
+  .brand[contenteditable]:focus, .sub[contenteditable]:focus { background: #f0f0f0; }
+  .brand:empty::before, .sub:empty::before { content: attr(data-ph); color: #cfcfcf; }
+
+  /* ---------- Depth 1: pastel folders ---------- */
+  .year {
+    margin-top: 90px;
+    font-size: 13px;
+    letter-spacing: 0.4em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .months {
+    margin-top: 64px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    column-gap: 56px;
+    row-gap: 60px;
+    justify-items: center;
+  }
+  .month {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 220px;
+    background: none;
+  }
+  .folder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 0.84;
+    margin-top: 16px;
+    transition: transform .45s cubic-bezier(.2,.7,.2,1), filter .45s ease;
+    filter: drop-shadow(0 6px 14px rgba(0,0,0,0.05));
+  }
+  .month:hover .folder {
+    transform: translateY(-12px);
+    filter: drop-shadow(0 18px 28px rgba(0,0,0,0.13));
+  }
+  .folder .back {
+    position: absolute; inset: 0;
+    background: var(--c);
+    background: color-mix(in srgb, var(--c) 52%, #ffffff);
+    border-radius: 16px;
+    z-index: 0;
+  }
+  .folder .tab {
+    position: absolute;
+    top: -13px; left: 12%;
+    width: 36%; height: 19px;
+    background: var(--c);
+    background: color-mix(in srgb, var(--c) 52%, #ffffff);
+    border-radius: 10px 10px 0 0;
+    z-index: 0;
+  }
+  .folder .pocket {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 60%;
+    background: var(--c);
+    border-radius: 16px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+    z-index: 4;
+  }
+  .folder .peek {
+    position: absolute;
+    width: 33%;
+    aspect-ratio: 3 / 4;
+    bottom: 33%;
+    background-size: cover;
+    background-position: center;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 2px 7px rgba(0,0,0,0.16);
+  }
+  .month .name {
+    margin-top: 22px;
+    font-family: Georgia, "Times New Roman", "Nanum Myeongjo", serif;
+    font-style: italic;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--fg);
+    letter-spacing: 0.01em;
+  }
+
+  /* ---------- Depth 2: gallery ---------- */
+  .gback {
+    margin: 40px 0 0;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    color: var(--fg);
+    font-weight: 300;
+    text-transform: uppercase;
+  }
+  .gback:hover { opacity: 0.5; }
+
+  .gtopbar { margin-top: 40px; display: flex; align-items: center; justify-content: space-between; }
+  .gtopbar .gback { margin: 0; }
+  .gedit {
+    font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted); font-weight: 300;
+  }
+  .gedit:hover { color: var(--fg); }
+  .gedit.on { color: var(--fg); }
+  .gedit.hidden { visibility: hidden; }
+
+  /* per-photo delete badge (gallery edit mode) */
+  .del-badge {
+    position: absolute; top: 10px; right: 10px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(0,0,0,0.5);
+    -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+    color: #fff; font-size: 17px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transform: scale(.8); pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+    z-index: 5;
+  }
+  .del-badge:hover { background: #e23; }
+  .gallery.editing .del-badge { opacity: 1; transform: scale(1); pointer-events: auto; }
+  .gallery.editing .gitem { cursor: default; }
+  .gallery.editing .gitem .frame img { opacity: 0.85; }
+
+  .ghead { margin: 64px 0 52px; }
+  .ghead .gmonth { font-size: 64px; font-weight: 200; letter-spacing: -0.01em; line-height: 1; }
+  .ghead .gyear { margin-top: 16px; font-size: 13px; letter-spacing: 0.4em; color: var(--muted); text-transform: uppercase; }
+
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    column-gap: 40px;
+    row-gap: 56px;
+  }
+  .gitem { cursor: pointer; position: relative; }
+  .gitem .frame {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    background: #f6f6f6;
+  }
+  .gitem .frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .9s cubic-bezier(.2,.7,.2,1), opacity .4s;
+    opacity: 0.97;
+  }
+  .gitem:hover .frame img { transform: scale(1.03); opacity: 1; }
+  .cap { margin-top: 22px; }
+  .cap .track { font-size: 15px; font-weight: 400; letter-spacing: 0.01em; }
+  .cap .artist { margin-top: 5px; font-size: 13px; color: var(--muted); font-weight: 300; letter-spacing: 0.02em; }
+
+  .empty {
+    grid-column: 1 / -1;
+    padding: 60px 0;
+    color: var(--muted);
+    font-weight: 300;
+    font-size: 14px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ---------- Depth 3: detail ---------- */
+  .dwrap { max-width: 720px; margin: 0 auto; }
+  .dhead { display: flex; justify-content: space-between; align-items: baseline; margin: 40px 0 70px; }
+  .dmeta { font-size: 12px; letter-spacing: 0.34em; color: var(--muted); text-transform: uppercase; }
+  .dphoto { width: 100%; background: #f6f6f6; }
+  .dphoto img { width: 100%; display: block; }
+
+  .player { margin-top: 46px; }
+  .pinfo .ptrack { font-size: 22px; font-weight: 300; }
+  .pinfo .partist { margin-top: 7px; font-size: 14px; color: var(--muted); font-weight: 300; letter-spacing: 0.02em; }
+
+  .progress { margin-top: 30px; height: 1px; background: var(--line); position: relative; cursor: pointer; }
+  .progress .bar { position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: var(--fg); transition: width .1s linear; }
+  .progress .knob {
+    position: absolute; top: 50%; left: 0%;
+    width: 7px; height: 7px; background: var(--fg); border-radius: 50%;
+    transform: translate(-50%, -50%); opacity: 0; transition: opacity .25s;
+  }
+  .progress:hover .knob { opacity: 1; }
+
+  .ptimes {
+    margin-top: 12px; display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--muted); letter-spacing: 0.08em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pctrl { margin-top: 34px; display: flex; align-items: center; gap: 40px; }
+  .pbtn { font-size: 13px; letter-spacing: 0.28em; text-transform: uppercase; font-weight: 400; }
+  .pbtn:hover { opacity: 0.5; }
+  .pbtn.edit { margin-left: auto; color: var(--muted); }
+  .pbtn.edit:hover { color: var(--fg); opacity: 1; }
+  .pbtn.del { color: var(--muted); }
+  .pbtn.del:hover { color: #e23; opacity: 1; }
+
+  .preview-note { margin-top: 30px; font-size: 11px; color: var(--muted); letter-spacing: 0.04em; font-weight: 300; line-height: 1.7; }
+  .preview-note a { color: var(--fg); text-decoration: none; border-bottom: 1px solid var(--line); }
+
+  /* ---------- Floating + ---------- */
+  .fab {
+    position: fixed; right: 40px; bottom: 40px;
+    width: 52px; height: 52px;
+    border: 1px solid var(--fg); border-radius: 50%;
+    font-size: 22px; font-weight: 300; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg);
+    transition: background .3s, color .3s, transform .3s;
+    z-index: 40;
+  }
+  .fab:hover { background: var(--fg); color: var(--bg); transform: rotate(90deg); }
+
+  /* ---------- Modal ---------- */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(255,255,255,0.86);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center;
+    z-index: 60; padding: 24px;
+  }
+  .overlay.active { display: flex; animation: fade .3s ease; }
+  .modal {
+    width: 100%; max-width: 480px;
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: 35px;
+    padding: 44px 42px 38px;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal h3 {
+    margin: 0; font-size: 12px; letter-spacing: 0.34em;
+    text-transform: uppercase; color: var(--muted); font-weight: 500;
+  }
+  .field { margin-top: 26px; }
+  .field label {
+    display: block; font-size: 11px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 10px; font-weight: 400;
+  }
+  .field input {
+    width: 100%; border: none; border-bottom: 1px solid var(--line);
+    padding: 8px 0; font-size: 15px; font-weight: 300; color: var(--fg);
+    background: none; outline: none; transition: border-color .3s;
+  }
+  .field input:focus { border-color: var(--fg); }
+  .field input::placeholder { color: #cfcfcf; }
+
+  .hint { margin-top: 10px; font-size: 11px; color: var(--muted); font-weight: 300; letter-spacing: 0.02em; line-height: 1.6; }
+  .hint .link { text-decoration: underline; color: var(--muted); letter-spacing: .02em; }
+  .hint .link:hover { color: var(--fg); }
+
+  .mactions { margin-top: 40px; display: flex; justify-content: flex-end; gap: 32px; }
+  .mactions button { font-size: 12px; letter-spacing: 0.24em; text-transform: uppercase; font-weight: 400; }
+  .mactions .cancel { color: var(--muted); }
+  .mactions .cancel:hover { color: var(--fg); }
+  .mactions .save:hover { opacity: 0.5; }
+
+  .mpreview { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 22px; display: none; }
+  .mpreview.show { display: block; }
+  .mpreview .lbl { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .mpreview a { font-size: 13px; color: var(--fg); text-decoration: none; border-bottom: 1px solid var(--line); word-break: break-all; }
+
+  /* Korean primary buttons keep natural spacing */
+  .mactions .ko { text-transform: none; letter-spacing: 0.06em; font-size: 13px; }
+
+  /* ---------- Detail · description caption (KO input) ---------- */
+  .dcaption {
+    width: 100%;
+    margin-top: 24px;
+    border: none;
+    outline: none;
+    background: none;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--fg);
+    letter-spacing: 0.01em;
+    padding: 6px 0;
+  }
+  .dcaption::placeholder { color: #c8c8c8; }
+
+  /* ---------- Detail · play/pause icon ---------- */
+  .playrow { margin-top: 36px; display: flex; justify-content: center; }
+  .playicon {
+    flex: 0 0 auto;
+    width: 52px; height: 52px;
+    border: 1px solid var(--fg);
+    border-radius: 50%;
+    font-size: 15px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    padding-left: 2px;            /* optical centering for ▶ */
+    transition: background .3s, color .3s;
+  }
+  .playicon.paused { padding-left: 0; }
+  .playicon:hover { background: var(--fg); color: var(--bg); }
+
+  .pctrl { justify-content: center; gap: 48px; }
+  .pctrl .pbtn { margin: 0; }
+  .pctrl .pbtn.edit { margin-left: 0; }
+
+  /* ---------- Music modal · search (Apple Music style) ---------- */
+  .ai-block {
+    margin-top: 22px;
+    background: #fafafa;
+    border-radius: 18px;
+    padding: 16px 16px;
+    min-height: 76px;
+    display: flex;
+    align-items: center;
+  }
+  .ai-loading {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 13px; color: var(--muted); font-weight: 300; letter-spacing: 0.01em;
+  }
+  .ai-result { display: none; width: 100%; }
+  .ai-block.done .ai-loading { display: none; }
+  .ai-block.done .ai-result { display: block; animation: fade .4s ease; }
+  .ai-lbl { font-size: 11px; letter-spacing: 0.14em; color: var(--muted); margin: 2px 6px 8px; }
+  .ai-dots { display: inline-flex; gap: 4px; }
+  .ai-dots i {
+    width: 5px; height: 5px; border-radius: 50%; background: var(--muted);
+    display: inline-block; animation: blink 1.2s infinite ease-in-out;
+  }
+  .ai-dots i:nth-child(2) { animation-delay: .2s; }
+  .ai-dots i:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+
+  /* search bar */
+  .search-bar {
+    margin-top: 24px;
+    display: flex; align-items: center; gap: 10px;
+    background: #f1f1f3; border-radius: 12px;
+    padding: 11px 15px;
+  }
+  .search-bar .ic { color: #9a9a9a; font-size: 14px; }
+  .search-bar input {
+    flex: 1; border: none; background: none; outline: none;
+    font-size: 15px; font-weight: 300; color: var(--fg);
+  }
+  .search-bar input::placeholder { color: #b3b3b3; }
+
+  /* results list */
+  .results-lbl { margin: 22px 6px 4px; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .results { max-height: 300px; overflow-y: auto; overflow-x: hidden; margin: 0 -4px; }
+  .results .stat { padding: 24px 6px; color: var(--muted); font-size: 13px; font-weight: 300; text-align: center; }
+
+  .song-row {
+    width: 100%;
+    display: flex; align-items: center; gap: 14px;
+    padding: 9px 6px;
+    text-align: left;
+    border-bottom: 1px solid #f2f2f2;
+    transition: background .2s;
+  }
+  .song-row:last-child { border-bottom: none; }
+  .song-row:hover { background: #fafafa; }
+  .song-row .art {
+    width: 46px; height: 46px; border-radius: 9px;
+    object-fit: cover; flex: 0 0 auto;
+    background: linear-gradient(135deg, #d7d7e2, #c6c6d4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: #fff;
+  }
+  .song-row .meta { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .song-row .t { font-size: 15px; color: var(--fg); font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .song-row .a { font-size: 13px; color: var(--muted); font-weight: 300; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .song-row .addic { flex: 0 0 auto; font-size: 22px; line-height: 1; color: #c4c4c4; font-weight: 300; }
+  .song-row:hover .addic { color: var(--fg); }
+
+  /* AI recommended row sits on the tinted block */
+  .ai-result .song-row { border: none; padding: 5px 6px; border-radius: 12px; }
+  .ai-result .song-row:hover { background: rgba(0,0,0,0.035); }
+
+  /* detail · album art thumb */
+  .pinfo { display: flex; align-items: center; gap: 14px; }
+  .dart { width: 54px; height: 54px; border-radius: 9px; object-fit: cover; flex: 0 0 auto; display: none; }
+  .dart.show { display: block; }
+  .pinfo .pmeta { min-width: 0; }
+
+  @media (max-width: 720px) {
+    .wrap { padding: 0 22px; }
+    .months { grid-template-columns: repeat(2, 1fr); column-gap: 28px; row-gap: 40px; }
+    .gallery { grid-template-columns: repeat(2, 1fr); column-gap: 20px; row-gap: 36px; }
+    .cap .track { font-size: 14px; }
+    .cap .artist { font-size: 12px; }
+    .ghead .gmonth { font-size: 46px; }
+    .month .name { font-size: 19px; }
+    .fab { right: 22px; bottom: 22px; }
+    .modal { padding: 32px 26px 28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ DEPTH 1: MAIN ============ -->
+<section id="view-main" class="view active">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand" id="brand" contenteditable="true" spellcheck="false" data-ph="Title">Archive</div>
+      <div class="sub" id="sub" contenteditable="true" spellcheck="false" data-ph="Subtitle">Photographs &amp; music, month by month.</div>
+    </div>
+    <div class="year" id="main-year">2026</div>
+    <div class="months" id="months"></div>
+  </div>
+</section>
+
+<!-- ============ DEPTH 2: GALLERY ============ -->
+<section id="view-gallery" class="view">
+  <div class="wrap">
+    <div class="gtopbar">
+      <button class="gback" onclick="go('main')">← Back</button>
+      <button class="gedit" id="gedit" onclick="toggleGalleryEdit()">Edit</button>
+    </div>
+    <div class="ghead">
+      <div class="gmonth" id="g-month">January</div>
+      <div class="gyear" id="g-year">2026</div>
+    </div>
+    <div class="gallery" id="gallery"></div>
+  </div>
+</section>
+
+<!-- ============ DEPTH 3: DETAIL ============ -->
+<section id="view-detail" class="view">
+  <div class="wrap dwrap">
+    <button class="gback" onclick="backToGallery()">← Back</button>
+    <div class="dhead">
+      <div class="dmeta" id="d-meta">January 2026</div>
+      <div class="dmeta" id="d-index">01</div>
+    </div>
+    <div class="dphoto"><img id="d-img" alt="" /></div>
+
+    <!-- 사진 설명 캡션 (한국어 입력) -->
+    <input id="d-desc" class="dcaption" type="text"
+           placeholder="사진에 대한 설명을 적어보세요..." />
+
+    <div class="player">
+      <div class="pinfo">
+        <img id="d-art" class="dart" alt="" />
+        <div class="pmeta">
+          <div class="ptrack" id="d-track">Untitled</div>
+          <div class="partist" id="d-artist">Unknown Artist</div>
+        </div>
+      </div>
+
+      <div class="progress" id="progress">
+        <div class="bar" id="bar"></div>
+        <div class="knob" id="knob"></div>
+      </div>
+      <div class="ptimes">
+        <span id="t-cur">0:00</span>
+        <span id="t-dur">0:30</span>
+      </div>
+
+      <div class="playrow">
+        <button class="playicon" id="playBtn" onclick="togglePlay()" aria-label="Play">▶</button>
+      </div>
+
+      <div class="pctrl">
+        <button class="pbtn edit" onclick="openMusic()">Edit</button>
+        <button class="pbtn del" onclick="deleteCurrent()">Delete</button>
+      </div>
+
+      <div class="preview-note" id="d-note"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Floating add -->
+<button class="fab" id="fab" onclick="openAdd()" title="Add">+</button>
+
+<!-- ============ MODAL · 사진 추가 (한국어) ============ -->
+<div class="overlay" id="overlay-photo">
+  <div class="modal">
+    <h3 id="photo-title">사진 추가 · January</h3>
+
+    <div class="field">
+      <label>이미지 주소</label>
+      <input id="in-photo" type="text" placeholder="이미지 주소 입력 (https://…)" />
+      <div class="hint">
+        <button type="button" class="link" onclick="document.getElementById('file-photo').click()">또는 기기에서 업로드</button>
+        <input type="file" id="file-photo" accept="image/*" style="display:none" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label>설명</label>
+      <input id="in-desc" type="text" placeholder="사진에 대한 설명을 적어보세요..." />
+    </div>
+
+    <div class="mactions">
+      <button class="cancel" onclick="closeModal('photo')">Close</button>
+      <button class="save ko" onclick="savePhoto()">추가하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL · 음악 추가/수정 (AI 연출, 한국어) ============ -->
+<div class="overlay" id="overlay-music">
+  <div class="modal">
+    <h3>음악 검색</h3>
+
+    <!-- AI 분석 연출 + 추천곡 -->
+    <div class="ai-block" id="ai-block">
+      <div class="ai-loading" id="ai-loading">
+        <span class="ai-dots"><i></i><i></i><i></i></span>
+        <span>사진의 분위기를 분석 중입니다...</span>
+      </div>
+      <div class="ai-result" id="ai-result">
+        <div class="ai-lbl">이 사진과 어울리는 음악</div>
+        <div id="ai-row"></div>
+      </div>
+    </div>
+
+    <!-- 검색창 -->
+    <div class="search-bar">
+      <span class="ic">⌕</span>
+      <input id="in-search" type="text" placeholder="노래, 아티스트 검색" autocomplete="off" />
+    </div>
+
+    <div class="results-lbl" id="results-lbl">인기곡</div>
+    <div class="results" id="results"></div>
+
+    <div class="mactions">
+      <button class="cancel" onclick="closeModal('music')">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   DATA MODEL
+   ============================================================ */
+const MONTHS = ["January","February","March","April","May","June",
+                "July","August","September","October","November","December"];
+/* Soft pastel per month — indie pink, sage, peach, butter, lavender, sky… */
+const COLORS = ["#F6BCCB","#B7CDB0","#F7C58F","#F4D58E","#EBA8D8","#AAD2EC",
+                "#F5A89B","#A7D7C5","#B9BCEC","#F2B68C","#E4B0C6","#BFE0E6"];
+const YEAR = 2026;
+const STORE_KEY = "archive.data.v1";
+
+/* data shape: { [monthIndex]: [ {id, photo, track, artist, appleUrl} ] } */
+let data = load();
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      for (let i = 0; i < 12; i++) if (!parsed[i]) parsed[i] = [];
+      return parsed;
+    }
+  } catch (e) {}
+  return seed();
+}
+function save() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch (e) {}
+}
+function seed() {
+  const d = {};
+  for (let i = 0; i < 12; i++) d[i] = [];
+  d[0] = [
+    { id: uid(), photo: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1000&q=80", track: "Holocene", artist: "Bon Iver", appleUrl: "" },
+    { id: uid(), photo: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1000&q=80", track: "Re: Stacks", artist: "Bon Iver", appleUrl: "" }
+  ];
+  d[4] = [
+    { id: uid(), photo: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=1000&q=80", track: "Sunset Lover", artist: "Petit Biscuit", appleUrl: "" }
+  ];
+  return d;
+}
+function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-3); }
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let currentMonth = 0;
+let currentItemId = null;
+let editingFromDetail = false; // true = Edit existing music; false = Add new entry
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function go(view) {
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.getElementById("view-" + view).classList.add("active");
+  window.scrollTo(0, 0);
+  document.getElementById("fab").style.display = (view === "detail") ? "none" : "flex";
+}
+function activeView() {
+  if (document.getElementById("view-detail").classList.contains("active")) return "detail";
+  if (document.getElementById("view-gallery").classList.contains("active")) return "gallery";
+  return "main";
+}
+function openMonth(i) {
+  currentMonth = i;
+  document.getElementById("g-month").textContent = MONTHS[i];
+  document.getElementById("g-year").textContent = YEAR;
+  resetGalleryEdit();
+  renderGallery();
+  go("gallery");
+}
+function backToGallery() {
+  stopPlayback();
+  renderGallery();
+  go("gallery");
+}
+
+/* ============================================================
+   DEPTH 1 — months grid
+   ============================================================ */
+function renderMonths() {
+  const el = document.getElementById("months");
+  document.getElementById("main-year").textContent = YEAR;
+  el.innerHTML = "";
+  MONTHS.forEach((m, i) => {
+    const items = data[i] || [];
+    const b = document.createElement("button");
+    b.className = "month";
+    b.style.setProperty("--c", COLORS[i]);
+    b.onclick = () => openMonth(i);
+
+    // Photos peeking out of the folder (up to 3) for months that have entries
+    const shown = items.slice(0, 3);
+    const k = shown.length;
+    const lefts = k === 1 ? [50] : k === 2 ? [40, 60] : [32, 50, 68];
+    const rots  = k === 1 ? [-4] : k === 2 ? [-9, 9] : [-11, 0, 11];
+    const peeks = shown.map((it, idx) =>
+      `<div class="peek" style="left:${lefts[idx]}%;` +
+      `transform:translateX(-50%) rotate(${rots[idx]}deg);` +
+      `z-index:${idx + 1};` +
+      `background-image:url('${escapeAttr(it.photo)}')"></div>`
+    ).join("");
+
+    b.innerHTML =
+      `<div class="folder">` +
+        `<div class="back"></div>` +
+        `<div class="tab"></div>` +
+        peeks +
+        `<div class="pocket"></div>` +
+      `</div>` +
+      `<div class="name">${m}</div>`;
+    el.appendChild(b);
+  });
+}
+
+/* ============================================================
+   DEPTH 2 — gallery
+   ============================================================ */
+let galleryEditMode = false;
+function toggleGalleryEdit() {
+  galleryEditMode = !galleryEditMode;
+  const btn = document.getElementById("gedit");
+  btn.textContent = galleryEditMode ? "Done" : "Edit";
+  btn.classList.toggle("on", galleryEditMode);
+  renderGallery();
+}
+function resetGalleryEdit() {
+  galleryEditMode = false;
+  const btn = document.getElementById("gedit");
+  btn.textContent = "Edit";
+  btn.classList.remove("on");
+}
+function deletePhoto(id, ev) {
+  if (ev) ev.stopPropagation();
+  const items = data[currentMonth] || [];
+  if (!items.some(x => x.id === id)) return;
+  if (!confirm("이 사진을 삭제할까요?")) return;
+  data[currentMonth] = items.filter(x => x.id !== id);
+  save();
+  renderMonths();
+  renderGallery();
+}
+
+function renderGallery() {
+  const el = document.getElementById("gallery");
+  const items = data[currentMonth] || [];
+  // Edit 버튼은 사진이 있을 때만 노출
+  document.getElementById("gedit").classList.toggle("hidden", items.length === 0);
+  if (items.length === 0) resetGalleryEdit();
+  el.classList.toggle("editing", galleryEditMode);
+  el.innerHTML = "";
+  if (items.length === 0) {
+    el.innerHTML = `<div class="empty">아직 사진이 없어요 — + 버튼으로 추가해보세요.</div>`;
+    return;
+  }
+  items.forEach(it => {
+    const d = document.createElement("div");
+    d.className = "gitem";
+    if (!galleryEditMode) d.onclick = () => openDetail(it.id);
+    d.innerHTML =
+      `<div class="frame"><img src="${escapeAttr(it.photo)}" alt="" loading="lazy" /></div>` +
+      `<button class="del-badge" aria-label="Delete">×</button>` +
+      `<div class="cap">` +
+        `<div class="track">${escapeHtml(it.track || "Untitled")}</div>` +
+        `<div class="artist">${escapeHtml(it.artist || "Unknown Artist")}</div>` +
+      `</div>`;
+    d.querySelector(".del-badge").onclick = ev => deletePhoto(it.id, ev);
+    el.appendChild(d);
+  });
+}
+
+/* ============================================================
+   DEPTH 3 — detail + player
+   ============================================================ */
+function currentItem() {
+  return (data[currentMonth] || []).find(x => x.id === currentItemId);
+}
+function openDetail(id) {
+  currentItemId = id;
+  const it = currentItem();
+  if (!it) return;
+  const idx = (data[currentMonth] || []).findIndex(x => x.id === id);
+  document.getElementById("d-img").src = it.photo;
+  document.getElementById("d-meta").textContent = MONTHS[currentMonth] + " " + YEAR;
+  document.getElementById("d-index").textContent = String(idx + 1).padStart(2, "0");
+  document.getElementById("d-desc").value = it.desc || "";
+  renderDetailTrack(it);
+  go("detail");
+  setupAudio(it);
+  if (it.preview || it.track) play();   // 사진을 열면 바로 재생
+}
+/* Persist the photo description on edit */
+document.getElementById("d-desc").addEventListener("change", () => {
+  const it = currentItem();
+  if (!it) return;
+  it.desc = document.getElementById("d-desc").value.trim();
+  save();
+});
+function renderDetailTrack(it) {
+  document.getElementById("d-track").textContent = it.track || "Untitled";
+  document.getElementById("d-artist").textContent = it.artist || "Unknown Artist";
+  const art = document.getElementById("d-art");
+  if (it.art) { art.src = it.art; art.classList.add("show"); }
+  else { art.classList.remove("show"); art.removeAttribute("src"); }
+  const note = document.getElementById("d-note");
+  if (it.appleUrl) {
+    note.innerHTML = `Linked on Apple Music — <a href="${escapeAttr(it.appleUrl)}" target="_blank" rel="noopener">open in Apple Music ↗</a>`;
+  } else {
+    note.innerHTML = "";
+  }
+}
+function deleteCurrent() {
+  const it = currentItem();
+  if (!it) return;
+  if (!confirm("이 항목을 삭제할까요?")) return;
+  data[currentMonth] = (data[currentMonth] || []).filter(x => x.id !== it.id);
+  save();
+  renderMonths();
+  renderGallery();
+  backToGallery();
+}
+
+/* --- Player: real iTunes 30s preview when available, else simulated --- */
+const audio = new Audio();
+audio.preload = "metadata";
+let playing = false;
+let usingAudio = false;   // true → drive from <audio>; false → simulated timeline
+let pos = 0;              // current position (seconds)
+let dur = 30;             // current track duration (seconds)
+let timer = null;         // simulation interval
+
+function fmt(s) {
+  s = Math.max(0, Math.floor(s || 0));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return m + ":" + String(r).padStart(2, "0");
+}
+function renderProgress() {
+  const pct = dur ? Math.min(100, (pos / dur) * 100) : 0;
+  document.getElementById("bar").style.width = pct + "%";
+  document.getElementById("knob").style.left = pct + "%";
+  document.getElementById("t-cur").textContent = fmt(pos);
+  document.getElementById("t-dur").textContent = fmt(dur);
+}
+function setPlayIcon(on) {
+  const b = document.getElementById("playBtn");
+  if (!b) return;
+  b.textContent = on ? "⏸" : "▶";
+  b.classList.toggle("paused", on);
+  b.setAttribute("aria-label", on ? "Pause" : "Play");
+}
+
+/* Configure the player for a given item (called from openDetail) */
+function setupAudio(it) {
+  stopPlayback();
+  if (it && it.preview) {
+    usingAudio = true;
+    audio.src = it.preview;
+    dur = 30;             // iTunes previews ~30s; refined on loadedmetadata
+  } else {
+    usingAudio = false;
+    audio.removeAttribute("src");
+    dur = 30;
+  }
+  pos = 0;
+  renderProgress();
+}
+function resetPlayback() { stopPlayback(); pos = 0; renderProgress(); }
+
+function stopSim() { if (timer) { clearInterval(timer); timer = null; } }
+function stopPlayback() {
+  playing = false;
+  stopSim();
+  audio.pause();
+  setPlayIcon(false);
+}
+function togglePlay() { playing ? pause() : play(); }
+function play() {
+  playing = true;
+  setPlayIcon(true);
+  if (usingAudio) {
+    audio.play().catch(() => {           // codec/autoplay blocked → fall back to sim
+      usingAudio = false;
+      simPlay();
+    });
+  } else {
+    simPlay();
+  }
+}
+function pause() {
+  playing = false;
+  setPlayIcon(false);
+  stopSim();
+  audio.pause();
+}
+function simPlay() {
+  stopSim();
+  timer = setInterval(() => {
+    pos += 0.1;
+    if (pos >= dur) { pos = dur; renderProgress(); stopPlayback(); pos = 0; renderProgress(); return; }
+    renderProgress();
+  }, 100);
+}
+
+/* Sync UI from the real audio element */
+audio.addEventListener("loadedmetadata", () => {
+  if (usingAudio && isFinite(audio.duration) && audio.duration > 0) { dur = audio.duration; renderProgress(); }
+});
+audio.addEventListener("timeupdate", () => {
+  if (usingAudio && playing) { pos = audio.currentTime; renderProgress(); }
+});
+audio.addEventListener("ended", () => { stopPlayback(); pos = 0; renderProgress(); });
+
+document.getElementById("progress").addEventListener("click", e => {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+  pos = ratio * dur;
+  if (usingAudio && isFinite(audio.duration) && audio.duration > 0) audio.currentTime = pos;
+  renderProgress();
+});
+
+/* ============================================================
+   MODAL — add / edit
+   ============================================================ */
+/* ---- 사진 추가 모달 ---- */
+function openAdd() {
+  document.getElementById("photo-title").textContent = "사진 추가 · " + MONTHS[currentMonth];
+  document.getElementById("in-photo").value = "";
+  document.getElementById("in-desc").value = "";
+  showModal("photo");
+  setTimeout(() => document.getElementById("in-photo").focus(), 50);
+}
+function savePhoto() {
+  const photo = document.getElementById("in-photo").value.trim();
+  const desc = document.getElementById("in-desc").value.trim();
+  if (!photo) { flashRequired("in-photo"); return; }
+  const item = { id: uid(), photo, desc, track: "", artist: "", appleUrl: "" };
+  if (!data[currentMonth]) data[currentMonth] = [];
+  data[currentMonth].push(item);
+  save();
+  renderMonths();
+  if (activeView() === "main") openMonth(currentMonth);
+  else renderGallery();
+  closeModal("photo");
+}
+
+/* ---- 음악 검색 모달 (Apple Music 스타일) ---- */
+
+/* 추천/검색 폴백용 유명곡 목록 */
+const FAMOUS = [
+  { track: "Blinding Lights", artist: "The Weeknd" },
+  { track: "As It Was", artist: "Harry Styles" },
+  { track: "Shape of You", artist: "Ed Sheeran" },
+  { track: "Bohemian Rhapsody", artist: "Queen" },
+  { track: "Dynamite", artist: "BTS" },
+  { track: "Someone Like You", artist: "Adele" },
+  { track: "Levitating", artist: "Dua Lipa" },
+  { track: "Viva La Vida", artist: "Coldplay" },
+  { track: "Sunflower", artist: "Post Malone & Swae Lee" },
+  { track: "Stay", artist: "The Kid LAROI & Justin Bieber" },
+  { track: "Yellow", artist: "Coldplay" },
+  { track: "Perfect", artist: "Ed Sheeran" }
+];
+function suggestFor(it) {
+  const key = (it && it.id) || "x";
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return FAMOUS[h % FAMOUS.length];
+}
+
+/* iTunes Search API (JSONP — CORS 우회). 실패 시 null 반환 */
+let jsonpId = 0;
+function itunesSearch(term) {
+  return new Promise(resolve => {
+    const fn = "__it" + (jsonpId++);
+    const s = document.createElement("script");
+    let done = false;
+    const cleanup = () => { try { delete window[fn]; } catch (e) { window[fn] = undefined; }
+                            if (s.parentNode) s.parentNode.removeChild(s); };
+    window[fn] = data => { if (done) return; done = true; cleanup(); resolve((data && data.results) || []); };
+    s.onerror = () => { if (done) return; done = true; cleanup(); resolve(null); };
+    setTimeout(() => { if (done) return; done = true; cleanup(); resolve(null); }, 6000);
+    s.src = "https://itunes.apple.com/search?term=" + encodeURIComponent(term) +
+            "&media=music&entity=song&limit=18&callback=" + fn;
+    document.body.appendChild(s);
+  });
+}
+function artUrl(r) {
+  return r.artworkUrl100
+    ? r.artworkUrl100.replace("100x100bb", "300x300bb").replace("100x100", "300x300")
+    : "";
+}
+
+/* 곡 한 줄 렌더링 (검색결과 / 추천 공용) */
+function makeRow(r) {
+  const btn = document.createElement("button");
+  btn.className = "song-row";
+  const art = artUrl(r);
+  const thumb = art
+    ? `<img class="art" src="${escapeAttr(art)}" alt="" />`
+    : `<span class="art">♪</span>`;
+  btn.innerHTML = thumb +
+    `<span class="meta">` +
+      `<span class="t">${escapeHtml(r.trackName || r.track || "")}</span>` +
+      `<span class="a">${escapeHtml(r.artistName || r.artist || "")}</span>` +
+    `</span>` +
+    `<span class="addic">+</span>`;
+  btn.onclick = () => addResult(r);
+  return btn;
+}
+function addResult(r) {
+  const it = currentItem();
+  if (!it) return;
+  it.track   = r.trackName  || r.track  || it.track;
+  it.artist  = r.artistName || r.artist || "";
+  it.appleUrl = r.trackViewUrl || "";
+  it.art     = artUrl(r) || "";
+  it.preview = r.previewUrl || "";
+  save();
+  renderDetailTrack(it);
+  setupAudio(it);
+  renderGallery();
+  closeModal("music");
+}
+function renderResults(list) {
+  const el = document.getElementById("results");
+  el.innerHTML = "";
+  if (list === null) { el.innerHTML = `<div class="stat">결과를 불러올 수 없어 추천 곡을 보여드려요.</div>`; return; }
+  if (!list.length) { el.innerHTML = `<div class="stat">검색 결과가 없어요.</div>`; return; }
+  list.forEach(r => el.appendChild(makeRow(r)));
+}
+function renderFamous(filter) {
+  const q = (filter || "").toLowerCase();
+  const list = q
+    ? FAMOUS.filter(f => (f.track + " " + f.artist).toLowerCase().includes(q))
+    : FAMOUS;
+  renderResults(list);
+}
+
+let aiTimer = null, searchTimer = null;
+function openMusic() {
+  const it = currentItem();
+  document.getElementById("in-search").value = "";
+  document.getElementById("results-lbl").textContent = "인기곡";
+  renderFamous("");                              // 즉시 채워서 목록처럼 보이게
+  showModal("music");
+
+  // AI 분위기 분석 연출 → 유명한 추천곡 1곡
+  const block = document.getElementById("ai-block");
+  block.classList.remove("done");
+  if (aiTimer) clearTimeout(aiTimer);
+  const pick = suggestFor(it);
+  aiTimer = setTimeout(async () => {
+    let rowData = pick;
+    const res = await itunesSearch(pick.track + " " + pick.artist);
+    if (res && res.length) {
+      rowData = res[0];
+      // 검색 전이라면 결과 리스트도 실제 데이터로 채워줌
+      if (!document.getElementById("in-search").value.trim()) renderResults(res);
+    }
+    const host = document.getElementById("ai-row");
+    host.innerHTML = "";
+    host.appendChild(makeRow(rowData));
+    block.classList.add("done");
+  }, 1400);
+}
+
+/* 검색 입력 (디바운스) */
+document.getElementById("in-search").addEventListener("input", e => {
+  const q = e.target.value.trim();
+  clearTimeout(searchTimer);
+  const lbl = document.getElementById("results-lbl");
+  if (!q) { lbl.textContent = "인기곡"; renderFamous(""); return; }
+  // Apple Music 링크를 붙여넣으면 바로 추가할 수 있게
+  if (/music\.apple\.com/i.test(q)) {
+    const p = parseMusic(q);
+    lbl.textContent = "링크";
+    renderResults([{ track: p.track || "Apple Music 링크", artist: "이 링크로 추가", trackViewUrl: p.url }]);
+    return;
+  }
+  lbl.textContent = "검색 결과";
+  document.getElementById("results").innerHTML = `<div class="stat">검색 중…</div>`;
+  searchTimer = setTimeout(async () => {
+    const res = await itunesSearch(q);
+    if (res === null) { renderFamous(q); return; }   // 오프라인 폴백
+    renderResults(res);
+  }, 320);
+});
+
+function showModal(which) { document.getElementById("overlay-" + which).classList.add("active"); }
+function closeModal(which) {
+  if (which) document.getElementById("overlay-" + which).classList.remove("active");
+  else document.querySelectorAll(".overlay").forEach(o => o.classList.remove("active"));
+}
+
+/* Parse an Apple Music URL or free text into {track, artist, url} */
+function parseMusic(input) {
+  const out = { track: "", artist: "", url: "" };
+  if (!input) return out;
+  input = input.trim();
+
+  if (/music\.apple\.com/i.test(input)) {
+    out.url = input;
+    try {
+      const u = new URL(input);
+      const segs = u.pathname.split("/").filter(Boolean);
+      let slug = "";
+      const ai = segs.indexOf("album");
+      const si = segs.indexOf("song");
+      if (si >= 0 && segs[si+1]) slug = segs[si+1];
+      else if (ai >= 0 && segs[ai+1]) slug = segs[ai+1];
+      if (slug) out.track = slugToTitle(slug);
+    } catch (e) {}
+    return out;
+  }
+
+  if (input.includes(" - ")) {
+    const [t, a] = input.split(" - ");
+    out.track = t.trim();
+    out.artist = (a || "").trim();
+  } else {
+    out.track = input;
+  }
+  return out;
+}
+function slugToTitle(slug) {
+  return slug.replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim()
+             .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+/* File upload → dataURL into photo field */
+document.getElementById("file-photo").addEventListener("change", e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => { document.getElementById("in-photo").value = ev.target.result; };
+  reader.readAsDataURL(f);
+});
+
+function flashRequired(id) {
+  const el = document.getElementById(id);
+  el.style.borderColor = "#e23";
+  el.focus();
+  setTimeout(() => el.style.borderColor = "", 1200);
+}
+
+/* Close modal on backdrop click / Esc */
+document.querySelectorAll(".overlay").forEach(o => {
+  o.addEventListener("click", e => { if (e.target === o) closeModal(); });
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeModal();
+});
+
+/* ============================================================
+   ESCAPING
+   ============================================================ */
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+function escapeAttr(s) { return escapeHtml(s); }
+
+/* ============================================================
+   EDITABLE HEADER (제목 / 부제목)
+   ============================================================ */
+const HEAD_KEY = "archive.header.v1";
+function loadHeader() {
+  try {
+    const h = JSON.parse(localStorage.getItem(HEAD_KEY));
+    if (h) {
+      if (typeof h.brand === "string") document.getElementById("brand").textContent = h.brand;
+      if (typeof h.sub === "string") document.getElementById("sub").textContent = h.sub;
+    }
+  } catch (e) {}
+}
+function saveHeader() {
+  const h = {
+    brand: document.getElementById("brand").textContent.trim(),
+    sub: document.getElementById("sub").textContent.trim()
+  };
+  try { localStorage.setItem(HEAD_KEY, JSON.stringify(h)); } catch (e) {}
+}
+["brand", "sub"].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener("blur", saveHeader);
+  el.addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); el.blur(); }   // 줄바꿈 막고 저장
+  });
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+loadHeader();
+renderMonths();
+go("main");
+</script>
+</body>
+</html>
